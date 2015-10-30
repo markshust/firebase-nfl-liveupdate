@@ -1,6 +1,6 @@
 # markoshust/firebase-nfl-liveupdate
 
-This script runs on an infinite loop and updates the Firebase `https://nfl-liveupdate.firebaseIO.com/` with the current live scores from NFL.com's official liveupdate scorestrip feed.
+This script runs an infinite loop that updates the Firebase `https://nfl-liveupdate.firebaseIO.com/` with the current live scores from NFL.com's official liveupdate scorestrip feed.
 
 ## Usage
 
