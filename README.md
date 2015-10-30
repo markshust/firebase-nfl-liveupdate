@@ -4,5 +4,5 @@ This script updates `https://nfl-liveupdate.firebaseIO.com/` with the current li
 
 ## Usage
 
-*Regular Season*: `node index.js AUTH_TOKEN`
-*Postseason*: `node index.js AUTH_TOKEN postseason`
+- Regular Season: `node index.js AUTH_TOKEN`
+- Postseason: `node index.js AUTH_TOKEN postseason`
