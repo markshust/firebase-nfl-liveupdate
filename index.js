@@ -8,7 +8,10 @@ const AUTH_TOKEN = args[0];
 const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
+const scoreIn1 = isPostseason ? 7 : 5;
+const scoreIn2 = isPostseason ? 9 : 7;
 var i = 1;
+var lastJson = {};
 
 fbRef.authWithCustomToken(AUTH_TOKEN, function(err, res) {
   if (err) {
@@ -29,19 +32,41 @@ function liveupdate() {
     });
 
     res.on('end', function() {
-      // Clean up a sloppy API format
-      json = json.replace(/,,/g, ',"",').replace(/,,/g, ',"",');
-      // Let's get this into JSON
-      json = JSON.parse(json).ss;
-
+      cleanseJson(json);
+      
       // Save returned data to Firebase
-      fbRef.set(json);
+      fbRef.set(lastJson);
       console.log(i + ': updated');
 
       i++;
       liveupdate();
     });
   });
+}
+
+function cleanseJson(json) {
+  // Clean up a sloppy API format
+  json = json.replace(/,,/g, ',"",').replace(/,,/g, ',"",');
+
+  // Let's get this into JSON
+  json = JSON.parse(json).ss;
+  
+  if (! lastJson.length) lastJson = json;
+
+  // Make sure new score is equal to or greater than stored score;
+  // we need this as the feed is load balanced, and NFL's servers
+  // don't all read from same source.
+  for (var i = 0; i < json.length; i++) {
+    if (lastJson[i][scoreIn1] >= json[i][scoreIn1]) {
+      json[i][scoreIn1] = lastJson[i][scoreIn1];
+    }
+
+    if (lastJson[i][scoreIn2] >= json[i][scoreIn2]) {
+      json[i][scoreIn2] = lastJson[i][scoreIn2];
+    }
+  }
+
+  lastJson = json;
 }
 
 /**
