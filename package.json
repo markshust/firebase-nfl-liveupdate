@@ -1,0 +1,23 @@
+{
+  "name": "firebase-nfl-liveupdate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markoshust/firebase-nfl-liveupdate.git"
+  },
+  "author": "Mark Shust <mark@shust.com> (http://markshust.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/markoshust/firebase-nfl-liveupdate/issues"
+  },
+  "homepage": "https://github.com/markoshust/firebase-nfl-liveupdate",
+  "dependencies": {
+    "firebase": "^2.3.1",
+    "http": "0.0.0"
+  }
+}
