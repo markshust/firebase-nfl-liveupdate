@@ -1,11 +1,11 @@
-var args = process.argv.slice(2);
+const args = process.argv.slice(2);
 if (! args.length) { console.log("You must supply an AUTH_TOKEN to run this script."); process.exit(1); }
-var isPostseason = args[1] == "postseason";
-var http = require('http');
-var Firebase = require('firebase');
-var fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
+const isPostseason = args[1] == "postseason";
+const http = require('http');
+const Firebase = require('firebase');
+const fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
 const AUTH_TOKEN = args[0];
-var url = isPostseason
+const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
 var i = 1;
