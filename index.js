@@ -43,3 +43,42 @@ function liveupdate() {
     });
   });
 }
+
+/**
+ * JSON indexes
+ * 
+ * Regular Season
+ *  0 => Day of week
+ *  1 => Time of game start
+ *  2 => Quarter (1, 2, 3, 4, Halftime, Final, Pregame OR final overtime)
+ *  3 => Current time
+ *  4 => Visiting Team Abbreviation
+ *  5 => Visiting Team Score
+ *  6 => Home Team Abbreviation
+ *  7 => Home Team Score
+ *  8 => UNKNOWN
+ *  9 => UNKNOWN
+ * 10 => Game Identifier
+ * 11 => UNKNOWN
+ * 12 => Week Identifier
+ * 13 => Year
+ *
+ * Postseason
+ *  0 => Day of week
+ *  1 => Time
+ *  2 => Quarter (1, 2, 3, 4, Halftime, Final, Pregame OR final overtime)
+ *  3 => UNKNOWN
+ *  4 => Visiting Team Full Name
+ *  5 => Visiting Team Abbreviation
+ *  6 => Visiting Team Score
+ *  7 => Home Team Full Name
+ *  8 => Home Team Abbreviation
+ *  9 => Home Team Score
+ * 10 => UNKNOWN
+ * 11 => UNKNOWN
+ * 12 => Game Identifier
+ * 13 => UNKNOWN
+ * 14 => TV Network
+ * 15 => Week Identifier
+ * 16 => Year
+ */
