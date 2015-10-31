@@ -8,5 +8,7 @@ Visit <a href="https://nfl-liveupdate.firebaseio.com/.json">https://nfl-liveupda
 
 ## Usage
 
-- Regular Season: `node index.js FIREBASE_AUTH_TOKEN`
-- Postseason: `node index.js FIREBASE_AUTH_TOKEN postseason`
+Replace `token` with your Firebase Auth Token.
+
+- Regular Season: `FIREBASE_AUTH_TOKEN=token node index.js`
+- Postseason: `FIREBASE_AUTH_TOKEN=token node index.js postseason`

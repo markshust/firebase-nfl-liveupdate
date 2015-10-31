@@ -1,7 +1,10 @@
+if (! process.env.FIREBASE_AUTH_TOKEN) {
+  console.log("You must supply FIREBASE_AUTH_TOKEN to run this script.");
+  process.exit(1);
+}
+
 const args = process.argv.slice(2);
-if (! args.length) { console.log("You must supply an AUTH_TOKEN to run this script."); process.exit(1); }
-const AUTH_TOKEN = args[0];
-const isPostseason = args[1] == "postseason";
+const isPostseason = args[0] == "postseason";
 const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
@@ -12,7 +15,7 @@ var recordCount = 1;
 var lastJson = {};
 var delayBetweenApiCalls = 100;
 
-fbRef.authWithCustomToken(AUTH_TOKEN, function(err, res) {
+fbRef.authWithCustomToken(process.env.FIREBASE_AUTH_TOKEN, function(err, res) {
   if (err) {
     console.log(err);
     process.exit(1);
