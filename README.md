@@ -10,7 +10,7 @@ Visit <a href="https://nfl-liveupdate.firebaseio.com/.json">https://nfl-liveupda
 
 Set the following environment variable:
 
-- *FIREBASE_AUTH_TOKEN*
+- `FIREBASE_AUTH_TOKEN`
 
 and then run:
 
