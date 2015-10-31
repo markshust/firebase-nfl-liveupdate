@@ -94,8 +94,9 @@ function reformatJson(jsonStr) {
 
 function getAwayScore(json, gameId) {
   var score = isPostseason ? json[6] : json[5];
-  
-  if (lastJson.length) {
+  if (score == "") score = 0;  
+
+  if (lastJson.length && lastJson[gameId]) {
     var oldScore = lastJson[gameId]['away_score'];
 
     if (lastJson[gameId]['just_updated']) {
@@ -105,12 +106,13 @@ function getAwayScore(json, gameId) {
     }
   }
 
-  return score;
+  return parseInt(score);
 }
 
 function getHomeScore(json, gameId) {
   var score = isPostseason ? json[9] : json[7];
-  
+  if (score == "") score = 0;  
+
   if (lastJson.length && lastJson[gameId]) {
     var oldScore = lastJson[gameId]['home_score'];
 
@@ -121,7 +123,7 @@ function getHomeScore(json, gameId) {
     }   
   }
 
-  return score;
+  return parseInt(score);
 }
 
 function getQuarter(json) {
