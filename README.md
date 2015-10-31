@@ -17,3 +17,7 @@ and then run:
 - Regular Season: `node index.js`
 - Postseason: `node index.js postseason`
 
+## Related Projects
+
+- <a href="https://github.com/markoshust/twitter-nfl-liveupdate">`https://github.com/markoshust/twitter-nfl-liveupdate`</a>
+
