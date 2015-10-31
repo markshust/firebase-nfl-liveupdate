@@ -11,16 +11,15 @@ const url = isPostseason
 const http = require('http');
 const Firebase = require('firebase');
 const fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
+const delayBetweenApiCalls = 100;
 var recordCount = 1;
 var lastJson = {};
-var delayBetweenApiCalls = 100;
 
 fbRef.authWithCustomToken(process.env.FIREBASE_AUTH_TOKEN, function(err, res) {
   if (err) {
     console.log(err);
     process.exit(1);
   } else {
-    fbRef.set({});
     console.log("Listening for updates...");
     liveupdate();
   }
@@ -36,9 +35,12 @@ function liveupdate() {
 
     res.on('end', function() {
       lastJson = reformatJson(jsonStr);
-      
+      json = lastJson;
+
+      for (gameId in json) delete json[gameId]["just_updated"];
+
       // Save returned data to Firebase
-      fbRef.set(lastJson);
+      fbRef.set(json);
       console.log(recordCount + ' fetched API result');
 
       recordCount++;
