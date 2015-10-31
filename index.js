@@ -2,8 +2,6 @@ const args = process.argv.slice(2);
 if (! args.length) { console.log("You must supply an AUTH_TOKEN to run this script."); process.exit(1); }
 const AUTH_TOKEN = args[0];
 const isPostseason = args[1] == "postseason";
-const scoreIn1 = isPostseason ? 7 : 5;
-const scoreIn2 = isPostseason ? 9 : 7;
 const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
@@ -12,6 +10,7 @@ const Firebase = require('firebase');
 const fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
 var recordCount = 1;
 var lastJson = {};
+var delayBetweenApiCalls = 100;
 
 fbRef.authWithCustomToken(AUTH_TOKEN, function(err, res) {
   if (err) {
@@ -19,54 +18,136 @@ fbRef.authWithCustomToken(AUTH_TOKEN, function(err, res) {
     process.exit(1);
   } else {
     fbRef.set({});
+    console.log("Listening for updates...");
     liveupdate();
   }
 });
 
 function liveupdate() {
   http.get(url, function(res) {
-    var json = '';
+    var jsonStr = '';
 
     res.on('data', function(chunk) {
-      json += chunk;
+      jsonStr += chunk;
     });
 
     res.on('end', function() {
-      cleanseJson(json);
+      lastJson = reformatJson(jsonStr);
       
       // Save returned data to Firebase
       fbRef.set(lastJson);
-      console.log(recordCount + ': updated');
+      console.log(recordCount + ' fetched API result');
 
       recordCount++;
-      liveupdate();
+
+      setTimeout(function() {
+        liveupdate();
+      }, delayBetweenApiCalls);
     });
   });
 }
 
-function cleanseJson(json) {
-  // Clean up a sloppy API format
-  json = json.replace(/,,/g, ',"",').replace(/,,/g, ',"",');
+/**
+ * Let's get this JSON into our own (better) readable format.
+ */
+function reformatJson(jsonStr) {
+  var newJson = {};
 
-  // Let's get this into JSON
-  json = JSON.parse(json).ss;
+  // Clean up sloppy JSON format
+  jsonStr = jsonStr.replace(/,,/g, ',"",').replace(/,,/g, ',"",');
+
+  // Convert to JSON object, grab 'ss' prop
+  var json = JSON.parse(jsonStr).ss;
+
+  for (var i = 0; i < json.length; i++) {
+    var gameId = isPostseason ? json[i][12] : json[i][10];
+    var day = json[i][0];
+    var startTime = json[i][1];
+    var quarter = getQuarter(json[i]);
+    var awayTeam = isPostseason ? json[i][5] : json[i][4];
+    var homeTeam = isPostseason ? json[i][8] : json[i][6];
+    var awayScore = getAwayScore(json[i], gameId);
+    var homeScore = getHomeScore(json[i], gameId);
+    var week = isPostseason ? json[i][15] : json[i][12];
+    var year = isPostseason ? json[i][16] : json[i][13];
+    var justUpdated = lastJson.length && lastJson[gameId] && lastJson[gameId]['just_updated'] ? true : false;
+
+    newJson[gameId] = {
+      day: day,
+      start_time: startTime,
+      quarter: quarter,
+      away_team: awayTeam,
+      home_team: homeTeam,
+      away_score: awayScore,
+      home_score: homeScore,
+      week: week,
+      year: year,
+      just_updated: justUpdated
+    };
+  }
+
+  return newJson;
+}
+
+function getAwayScore(json, gameId) {
+  var score = isPostseason ? json[6] : json[5];
   
-  // Make sure new score is equal to or greater than stored score;
-  // we need this as the feed is load balanced, and NFL's servers
-  // don't all read from same source.
   if (lastJson.length) {
-    for (var i = 0; i < json.length; i++) {
-      if (lastJson[i][scoreIn1] >= json[i][scoreIn1]) {
-        json[i][scoreIn1] = lastJson[i][scoreIn1];
-      }
+    var oldScore = lastJson[gameId]['away_score'];
 
-      if (lastJson[i][scoreIn2] >= json[i][scoreIn2]) {
-        json[i][scoreIn2] = lastJson[i][scoreIn2];
-      }
+    if (lastJson[gameId]['just_updated']) {
+      score = oldScore;
+    } else if (score != oldScore) {
+      justUpdatedTimeout(gameId);
     }
   }
 
-  lastJson = json;
+  return score;
+}
+
+function getHomeScore(json, gameId) {
+  var score = isPostseason ? json[9] : json[7];
+  
+  if (lastJson.length && lastJson[gameId]) {
+    var oldScore = lastJson[gameId]['home_score'];
+
+    if (lastJson[gameId]['just_updated']) {
+      score = oldScore;
+    } else if (score != oldScore) {
+      justUpdatedTimeout(gameId);
+    }   
+  }
+
+  return score;
+}
+
+function getQuarter(json) {
+  var quarter = json[2];
+
+  switch (quarter) {
+    case '1': case '2': case '3': case '4': break;
+    case 'Halftime':                        quarter = 'H'; break;
+    case 'Final': case 'final overtime':    quarter = 'F'; break;
+    case 'Pregame':                         quarter = 'P'; break;
+    default:                                quarter = 'O'; break;
+  }
+
+  return quarter;
+}
+
+/**
+ * This will prevent the game score from being updated again for a few seconds.
+ * This avoids issues with rotating load balancers not being fully synced.
+ */
+function justUpdatedTimeout(gameId) {
+  lastJson[gameId]['just_updated'] = true;
+
+  console.log('Game just updated!');
+  console.log(lastJson[gameId]);
+
+  setTimeout(function() {
+    lastJson[gameId]['just_updated'] = false;
+  }, 15000);
 }
 
 /**
@@ -90,7 +171,7 @@ function cleanseJson(json) {
  *
  * Postseason
  *  0 => Day of week
- *  1 => Time
+ *  1 => Time of game start
  *  2 => Quarter (1, 2, 3, 4, Halftime, Final, Pregame OR final overtime)
  *  3 => UNKNOWN
  *  4 => Visiting Team Full Name
@@ -107,3 +188,4 @@ function cleanseJson(json) {
  * 15 => Week Identifier
  * 16 => Year
  */
+
