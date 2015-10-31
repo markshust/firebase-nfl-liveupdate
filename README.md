@@ -8,7 +8,12 @@ Visit <a href="https://nfl-liveupdate.firebaseio.com/.json">https://nfl-liveupda
 
 ## Usage
 
-Replace `token` with your Firebase Auth Token.
+Set the following environment variable:
 
-- Regular Season: `FIREBASE_AUTH_TOKEN=token node index.js`
-- Postseason: `FIREBASE_AUTH_TOKEN=token node index.js postseason`
+- *FIREBASE_AUTH_TOKEN*
+
+and then run:
+
+- Regular Season: `node index.js`
+- Postseason: `node index.js postseason`
+
