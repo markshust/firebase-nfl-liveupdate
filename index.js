@@ -1,16 +1,16 @@
 const args = process.argv.slice(2);
 if (! args.length) { console.log("You must supply an AUTH_TOKEN to run this script."); process.exit(1); }
-const isPostseason = args[1] == "postseason";
-const http = require('http');
-const Firebase = require('firebase');
-const fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
 const AUTH_TOKEN = args[0];
+const isPostseason = args[1] == "postseason";
+const scoreIn1 = isPostseason ? 7 : 5;
+const scoreIn2 = isPostseason ? 9 : 7;
 const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
-const scoreIn1 = isPostseason ? 7 : 5;
-const scoreIn2 = isPostseason ? 9 : 7;
-var i = 1;
+const http = require('http');
+const Firebase = require('firebase');
+const fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
+var recordCount = 1;
 var lastJson = {};
 
 fbRef.authWithCustomToken(AUTH_TOKEN, function(err, res) {
@@ -36,9 +36,9 @@ function liveupdate() {
       
       // Save returned data to Firebase
       fbRef.set(lastJson);
-      console.log(i + ': updated');
+      console.log(recordCount + ': updated');
 
-      i++;
+      recordCount++;
       liveupdate();
     });
   });
@@ -51,18 +51,18 @@ function cleanseJson(json) {
   // Let's get this into JSON
   json = JSON.parse(json).ss;
   
-  if (! lastJson.length) lastJson = json;
-
   // Make sure new score is equal to or greater than stored score;
   // we need this as the feed is load balanced, and NFL's servers
   // don't all read from same source.
-  for (var i = 0; i < json.length; i++) {
-    if (lastJson[i][scoreIn1] >= json[i][scoreIn1]) {
-      json[i][scoreIn1] = lastJson[i][scoreIn1];
-    }
+  if (lastJson.length) {
+    for (var i = 0; i < json.length; i++) {
+      if (lastJson[i][scoreIn1] >= json[i][scoreIn1]) {
+        json[i][scoreIn1] = lastJson[i][scoreIn1];
+      }
 
-    if (lastJson[i][scoreIn2] >= json[i][scoreIn2]) {
-      json[i][scoreIn2] = lastJson[i][scoreIn2];
+      if (lastJson[i][scoreIn2] >= json[i][scoreIn2]) {
+        json[i][scoreIn2] = lastJson[i][scoreIn2];
+      }
     }
   }
 
