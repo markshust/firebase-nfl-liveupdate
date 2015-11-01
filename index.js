@@ -1,28 +1,30 @@
 require('dotenv').config({silent: true});
 
 if (! process.env.FIREBASE_AUTH_TOKEN) {
-  console.log("You must supply FIREBASE_AUTH_TOKEN to run this script.");
+  console.log('You must supply FIREBASE_AUTH_TOKEN to run this script.');
   process.exit(1);
 }
 
 const args = process.argv.slice(2);
-const isPostseason = args[0] == "postseason";
+const isPostseason = args[0] == 'postseason';
 const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
 const http = require('http');
+const _ = require('lodash');
 const Firebase = require('firebase');
 const fbRef = new Firebase('https://nfl-liveupdate.firebaseIO.com/');
 const delayBetweenApiCalls = 100;
 var recordCount = 1;
 var lastJson = {};
+var justUpdated = [];
 
 fbRef.authWithCustomToken(process.env.FIREBASE_AUTH_TOKEN, function(err, res) {
   if (err) {
     console.log(err);
     process.exit(1);
   } else {
-    console.log("Listening for updates...");
+    console.log('Listening for updates...');
     liveupdate();
   }
 });
@@ -37,14 +39,9 @@ function liveupdate() {
 
     res.on('end', function() {
       lastJson = reformatJson(jsonStr);
-      var json = lastJson;
-
-      for (var gameId in json) {
-        delete json[gameId]["just_updated"];
-      }
 
       // Save returned data to Firebase
-      fbRef.set(json);
+      fbRef.set(lastJson);
       console.log(recordCount + ' fetched API result');
 
       recordCount++;
@@ -71,11 +68,7 @@ function reformatJson(jsonStr) {
   for (var i = 0; i < json.length; i++) {
     var gameId = isPostseason ? json[i][12] : json[i][10];
 
-    if (
-      lastJson.length
-      && lastJson[gameId]
-      && lastJson[gameId]['just_updated']
-    ) {
+    if (justUpdated.indexOf(gameId) != -1) {
       newJson[gameId] = lastJson[gameId];
     } else {
       var day = json[i][0];
@@ -87,8 +80,6 @@ function reformatJson(jsonStr) {
       var homeScore = getHomeScore(json[i], gameId);
       var week = isPostseason ? json[i][15] : json[i][12];
       var year = isPostseason ? json[i][16] : json[i][13];
-      var justUpdated = lastJson.length && lastJson[gameId]
-        && lastJson[gameId]['just_updated'] ? true : false;
 
       newJson[gameId] = {
         day: day,
@@ -99,8 +90,7 @@ function reformatJson(jsonStr) {
         away_score: awayScore,
         home_score: homeScore,
         week: week,
-        year: year,
-        just_updated: justUpdated
+        year: year
       };
     }
   }
@@ -111,7 +101,7 @@ function reformatJson(jsonStr) {
 function getAwayScore(json, gameId) {
   var score = isPostseason ? json[6] : json[5];
 
-  if (score == "") score = 0;  
+  if (score == '') score = 0;
 
   if (lastJson.length
     && lastJson[gameId]
@@ -126,7 +116,7 @@ function getAwayScore(json, gameId) {
 function getHomeScore(json, gameId) {
   var score = isPostseason ? json[9] : json[7];
 
-  if (score == "") score = 0;  
+  if (score == '') score = 0;
 
   if (lastJson.length
     && lastJson[gameId]
@@ -164,21 +154,17 @@ function getQuarter(json, gameId) {
  * This avoids issues with rotating load balancers not being fully synced.
  */
 function justUpdatedTimeout(gameId) {
-  if (! lastJson.length || ! lastJson[gameId]) {
-    lastJson[gameId] = [];
-  }
-
-  if (lastJson[gameId]['just_updated']) {
+  if (justUpdated.indexOf(gameId) != -1) {
     return;
   }
 
-  lastJson[gameId]['just_updated'] = true;
+  justUpdated.push(gameId);
 
   console.log('Game just updated!');
   console.log(lastJson[gameId]);
 
   setTimeout(function() {
-    lastJson[gameId]['just_updated'] = false;
+    _.pull(justUpdated, gameId);
   }, 15000);
 }
 
