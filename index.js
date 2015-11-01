@@ -1,3 +1,5 @@
+require('dotenv').config({silent: true});
+
 if (! process.env.FIREBASE_AUTH_TOKEN) {
   console.log("You must supply FIREBASE_AUTH_TOKEN to run this script.");
   process.exit(1);
@@ -75,7 +77,8 @@ function reformatJson(jsonStr) {
     var homeScore = getHomeScore(json[i], gameId);
     var week = isPostseason ? json[i][15] : json[i][12];
     var year = isPostseason ? json[i][16] : json[i][13];
-    var justUpdated = lastJson.length && lastJson[gameId] && lastJson[gameId]['just_updated'] ? true : false;
+    var justUpdated = lastJson.length && lastJson[gameId]
+      && lastJson[gameId]['just_updated'] ? true : false;
 
     newJson[gameId] = {
       day: day,
@@ -96,6 +99,7 @@ function reformatJson(jsonStr) {
 
 function getAwayScore(json, gameId) {
   var score = isPostseason ? json[6] : json[5];
+
   if (score == "") score = 0;  
 
   if (lastJson.length && lastJson[gameId]) {
@@ -113,6 +117,7 @@ function getAwayScore(json, gameId) {
 
 function getHomeScore(json, gameId) {
   var score = isPostseason ? json[9] : json[7];
+
   if (score == "") score = 0;  
 
   if (lastJson.length && lastJson[gameId]) {
