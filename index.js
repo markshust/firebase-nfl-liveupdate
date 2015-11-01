@@ -37,9 +37,11 @@ function liveupdate() {
 
     res.on('end', function() {
       lastJson = reformatJson(jsonStr);
-      json = lastJson;
+      var json = lastJson;
 
-      for (gameId in json) delete json[gameId]["just_updated"];
+      for (var gameId in json) {
+        delete json[gameId]["just_updated"];
+      }
 
       // Save returned data to Firebase
       fbRef.set(json);
@@ -68,30 +70,39 @@ function reformatJson(jsonStr) {
 
   for (var i = 0; i < json.length; i++) {
     var gameId = isPostseason ? json[i][12] : json[i][10];
-    var day = json[i][0];
-    var startTime = json[i][1];
-    var quarter = getQuarter(json[i]);
-    var awayTeam = isPostseason ? json[i][5] : json[i][4];
-    var homeTeam = isPostseason ? json[i][8] : json[i][6];
-    var awayScore = getAwayScore(json[i], gameId);
-    var homeScore = getHomeScore(json[i], gameId);
-    var week = isPostseason ? json[i][15] : json[i][12];
-    var year = isPostseason ? json[i][16] : json[i][13];
-    var justUpdated = lastJson.length && lastJson[gameId]
-      && lastJson[gameId]['just_updated'] ? true : false;
 
-    newJson[gameId] = {
-      day: day,
-      start_time: startTime,
-      quarter: quarter,
-      away_team: awayTeam,
-      home_team: homeTeam,
-      away_score: awayScore,
-      home_score: homeScore,
-      week: week,
-      year: year,
-      just_updated: justUpdated
-    };
+    if (
+      lastJson.length
+      && lastJson[gameId]
+      && lastJson[gameId]['just_updated']
+    ) {
+      newJson[gameId] = lastJson[gameId];
+    } else {
+      var day = json[i][0];
+      var startTime = json[i][1];
+      var quarter = getQuarter(json[i], gameId);
+      var awayTeam = isPostseason ? json[i][5] : json[i][4];
+      var homeTeam = isPostseason ? json[i][8] : json[i][6];
+      var awayScore = getAwayScore(json[i], gameId);
+      var homeScore = getHomeScore(json[i], gameId);
+      var week = isPostseason ? json[i][15] : json[i][12];
+      var year = isPostseason ? json[i][16] : json[i][13];
+      var justUpdated = lastJson.length && lastJson[gameId]
+        && lastJson[gameId]['just_updated'] ? true : false;
+
+      newJson[gameId] = {
+        day: day,
+        start_time: startTime,
+        quarter: quarter,
+        away_team: awayTeam,
+        home_team: homeTeam,
+        away_score: awayScore,
+        home_score: homeScore,
+        week: week,
+        year: year,
+        just_updated: justUpdated
+      };
+    }
   }
 
   return newJson;
@@ -102,14 +113,11 @@ function getAwayScore(json, gameId) {
 
   if (score == "") score = 0;  
 
-  if (lastJson.length && lastJson[gameId]) {
-    var oldScore = lastJson[gameId]['away_score'];
-
-    if (lastJson[gameId]['just_updated']) {
-      score = oldScore;
-    } else if (score != oldScore) {
-      justUpdatedTimeout(gameId);
-    }
+  if (lastJson.length
+    && lastJson[gameId]
+    && score != lastJson[gameId]['away_score']
+  ) {
+    justUpdatedTimeout(gameId);
   }
 
   return parseInt(score);
@@ -120,20 +128,17 @@ function getHomeScore(json, gameId) {
 
   if (score == "") score = 0;  
 
-  if (lastJson.length && lastJson[gameId]) {
-    var oldScore = lastJson[gameId]['home_score'];
-
-    if (lastJson[gameId]['just_updated']) {
-      score = oldScore;
-    } else if (score != oldScore) {
-      justUpdatedTimeout(gameId);
-    }   
+  if (lastJson.length
+    && lastJson[gameId]
+    && score != lastJson[gameId]['home_score']
+  ) {
+    justUpdatedTimeout(gameId);
   }
 
   return parseInt(score);
 }
 
-function getQuarter(json) {
+function getQuarter(json, gameId) {
   var quarter = json[2];
 
   switch (quarter) {
@@ -144,6 +149,13 @@ function getQuarter(json) {
     default:                                quarter = 'O'; break;
   }
 
+  if (lastJson.length
+    && lastJson[gameId]
+    && quarter != lastJson[gameId]['quarter']
+  ) {
+    justUpdatedTimeout(gameId);
+  }
+
   return quarter;
 }
 
@@ -152,6 +164,14 @@ function getQuarter(json) {
  * This avoids issues with rotating load balancers not being fully synced.
  */
 function justUpdatedTimeout(gameId) {
+  if (! lastJson.length || ! lastJson[gameId]) {
+    lastJson[gameId] = [];
+  }
+
+  if (lastJson[gameId]['just_updated']) {
+    return;
+  }
+
   lastJson[gameId]['just_updated'] = true;
 
   console.log('Game just updated!');
