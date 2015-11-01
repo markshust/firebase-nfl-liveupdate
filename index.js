@@ -50,6 +50,8 @@ function liveupdate() {
         liveupdate();
       }, delayBetweenApiCalls);
     });
+  }).on('error', function(e) {
+    console.log('Error: ' + e.message);
   });
 }
 
@@ -62,8 +64,15 @@ function reformatJson(jsonStr) {
   // Clean up sloppy JSON format
   jsonStr = jsonStr.replace(/,,/g, ',"",').replace(/,,/g, ',"",');
 
-  // Convert to JSON object, grab 'ss' prop
-  var json = JSON.parse(jsonStr).ss;
+  // Convert to JSON object
+  try {
+    var json = JSON.parse(jsonStr);
+  } catch(e) {
+    console.log('Error: ' + jsonStr + ' cannot be parse as JSON');
+  }
+
+  // `ss` prop contains all data
+  json = json.ss;
 
   for (var i = 0; i < json.length; i++) {
     var gameId = isPostseason ? json[i][12] : json[i][10];
