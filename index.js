@@ -72,35 +72,37 @@ function reformatJson(jsonStr) {
   }
 
   // `ss` prop contains all data
-  json = json.ss;
+  if (json && 'ss' in json) {
+    json = json.ss;
 
-  for (var i = 0; i < json.length; i++) {
-    var gameId = isPostseason ? json[i][12] : json[i][10];
+    for (var i = 0; i < json.length; i++) {
+      var gameId = isPostseason ? json[i][12] : json[i][10];
 
-    if (justUpdated.indexOf(gameId) != -1) {
-      newJson[gameId] = lastJson[gameId];
-    } else {
-      var day = json[i][0];
-      var startTime = json[i][1];
-      var quarter = getQuarter(json[i], gameId);
-      var awayTeam = isPostseason ? json[i][5] : json[i][4];
-      var homeTeam = isPostseason ? json[i][8] : json[i][6];
-      var awayScore = getAwayScore(json[i], gameId);
-      var homeScore = getHomeScore(json[i], gameId);
-      var week = isPostseason ? json[i][15] : json[i][12];
-      var year = isPostseason ? json[i][16] : json[i][13];
+      if (justUpdated.indexOf(gameId) != -1) {
+        newJson[gameId] = lastJson[gameId];
+      } else {
+        var day = json[i][0];
+        var startTime = json[i][1];
+        var quarter = getQuarter(json[i], gameId);
+        var awayTeam = isPostseason ? json[i][5] : json[i][4];
+        var homeTeam = isPostseason ? json[i][8] : json[i][6];
+        var awayScore = getAwayScore(json[i], gameId);
+        var homeScore = getHomeScore(json[i], gameId);
+        var week = isPostseason ? json[i][15] : json[i][12];
+        var year = isPostseason ? json[i][16] : json[i][13];
 
-      newJson[gameId] = {
-        day: day,
-        start_time: startTime,
-        quarter: quarter,
-        away_team: awayTeam,
-        home_team: homeTeam,
-        away_score: awayScore,
-        home_score: homeScore,
-        week: week,
-        year: year
-      };
+        newJson[gameId] = {
+          day: day,
+          start_time: startTime,
+          quarter: quarter,
+          away_team: awayTeam,
+          home_team: homeTeam,
+          away_score: awayScore,
+          home_score: homeScore,
+          week: week,
+          year: year
+        };
+      }
     }
   }
 
