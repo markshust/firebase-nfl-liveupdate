@@ -114,7 +114,7 @@ function getAwayScore(json, gameId) {
 
   if (score == '') score = 0;
 
-  if (lastJson.length
+  if (! _.isEmpty(lastJson)
     && lastJson[gameId]
     && score != lastJson[gameId]['away_score']
   ) {
@@ -129,7 +129,7 @@ function getHomeScore(json, gameId) {
 
   if (score == '') score = 0;
 
-  if (lastJson.length
+  if (! _.isEmpty(lastJson)
     && lastJson[gameId]
     && score != lastJson[gameId]['home_score']
   ) {
@@ -150,7 +150,7 @@ function getQuarter(json, gameId) {
     default:                                quarter = 'O'; break;
   }
 
-  if (lastJson.length
+  if (! _.isEmpty(lastJson)
     && lastJson[gameId]
     && quarter != lastJson[gameId]['quarter']
   ) {
