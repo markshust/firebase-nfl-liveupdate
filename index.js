@@ -5,8 +5,7 @@ if (! process.env.FIREBASE_AUTH_TOKEN) {
   process.exit(1);
 }
 
-const args = process.argv.slice(2);
-const isPostseason = args[0] == 'postseason';
+const isPostseason = process.env.IS_POSTSEASON == 'true';
 const url = isPostseason
   ? 'http://www.nfl.com/liveupdate/scorestrip/postseason/scorestrip.json'
   : 'http://www.nfl.com/liveupdate/scorestrip/scorestrip.json';
@@ -77,6 +76,8 @@ function reformatJson(jsonStr) {
 
     for (var i = 0; i < json.length; i++) {
       var gameId = isPostseason ? json[i][12] : json[i][10];
+
+      if (gameId == 0) continue;
 
       if (justUpdated.indexOf(gameId) != -1) {
         newJson[gameId] = lastJson[gameId];

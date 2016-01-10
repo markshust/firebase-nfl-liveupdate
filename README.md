@@ -11,11 +11,11 @@ Visit <a href="https://nfl-liveupdate.firebaseio.com/.json">https://nfl-liveupda
 Set the following environment variable:
 
 - `FIREBASE_AUTH_TOKEN`
+- `IS_POSTSEASON`
 
 and then run:
 
-- Regular Season: `node index.js`
-- Postseason: `node index.js postseason`
+- `node index.js`
 
 ## Related Projects
 
